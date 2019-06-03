@@ -1,0 +1,27 @@
+{
+  "name": "event-emitter-async-iterator",
+  "version": "1.0.0",
+  "description": "Async Iterator with Event Emitter",
+  "license": "MIT",
+  "author": {
+    "name": "John Murphy-Teixidor",
+    "email": "johnvmt@gmail.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/johnvmt/event-emitter-async-iterator"
+  },
+  "scripts": {
+    "test": "mocha --colors ./test/*.test.js"
+  },
+  "devDependencies": {
+  },
+  "dependencies": {
+    "esm": "^3.2.25",
+    "wolfy87-eventemitter": "^5.2.6",
+    "iterall": "^1.2.2"
+  },
+  "main": "index.js",
+  "jsnext:main": "src/EventEmitterAsyncIterator.js",
+  "module": "src/EventEmitterAsyncIterator.js"
+}
