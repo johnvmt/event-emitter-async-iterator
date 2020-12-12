@@ -1,6 +1,6 @@
 {
   "name": "event-emitter-async-iterator",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "Async Iterator with Event Emitter",
   "license": "MIT",
   "author": {
@@ -17,11 +17,10 @@
   "devDependencies": {
   },
   "dependencies": {
-    "esm": "^3.2.25",
-    "wolfy87-eventemitter": "^5.2.6",
+    "eventemitter3": "^4.0.7",
     "iterall": "^1.2.2"
   },
-  "main": "index.js",
-  "jsnext:main": "src/EventEmitterAsyncIterator.js",
+  "type": "module",
+  "main": "src/EventEmitterAsyncIterator.js",
   "module": "src/EventEmitterAsyncIterator.js"
 }

@@ -1,5 +1,5 @@
-import EventEmitter from 'wolfy87-eventemitter';
-import iterall from 'iterall';
+import EventEmitter from "eventemitter3";
+import iterall from "iterall";
 
 class EventEmitterAsyncIterator extends EventEmitter {
 	constructor() {
