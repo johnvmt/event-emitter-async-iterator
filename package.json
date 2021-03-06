@@ -13,18 +13,17 @@
   },
   "scripts": {
     "test": "mocha --colors ./test/*.test.js",
-    "build": "npx babel --plugins @babel/plugin-transform-modules-commonjs --out-dir cjs src"
+    "build": "tsc -p ."
   },
   "devDependencies": {
-    "@babel/cli": "^7.12.10",
-    "@babel/core": "^7.12.10",
-    "@babel/plugin-transform-modules-commonjs": "^7.12.1",
-    "@babel/preset-env": "^7.12.11"
+    "typescript": "^4.2.3",
+    "mocha": "^8.3.1"
   },
   "dependencies": {
     "eventemitter3": "^4.0.7",
     "iterall": "^1.2.2"
   },
+  "types": "./cjs/EventEmitterAsyncIterator.d.ts",
   "exports": {
     "require": "./cjs/EventEmitterAsyncIterator.js",
     "import": "./src/EventEmitterAsyncIterator.js"
