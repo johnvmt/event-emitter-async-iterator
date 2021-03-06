@@ -1,9 +1,11 @@
 import EventEmitter from "eventemitter3";
 import iterall from "iterall";
 
+type ResolveResult = (arg: { value: any, done: boolean }) => void;
+
 class EventEmitterAsyncIterator extends EventEmitter implements AsyncIterator<any> {
-	protected pullQueue: any[];
-	protected pushQueue: Promise<any>[];
+	protected pullQueue: ResolveResult[];
+	protected pushQueue: any[];
 	protected listening: boolean;
 
 	public readonly [iterall.$$asyncIterator]: () => this;
@@ -46,7 +48,7 @@ class EventEmitterAsyncIterator extends EventEmitter implements AsyncIterator<an
 
 	public pushValue(event: any): void {
 		if(this.pullQueue.length !== 0)
-			this.pullQueue.shift()({
+			this.pullQueue.shift()!({
 				value: event,
 				done: false
 			});
