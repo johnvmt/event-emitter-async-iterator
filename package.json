@@ -13,7 +13,8 @@
   },
   "scripts": {
     "test": "mocha --colors ./test/*.test.js",
-    "build": "tsc -p ."
+    "build": "tsc -p .",
+    "build:watch": "tsc -p . --watch"
   },
   "devDependencies": {
     "typescript": "^4.2.3",
