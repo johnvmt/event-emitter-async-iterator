@@ -4,8 +4,9 @@ declare type ResolveResult = (arg: {
     value: any;
     done: boolean;
 }) => void;
+declare type RejectResult = (error: Error) => void;
 declare class EventEmitterAsyncIterator extends EventEmitter implements AsyncIterator<any> {
-    protected pullQueue: ResolveResult[];
+    protected pullQueue: Array<[ResolveResult, RejectResult]>;
     protected pushQueue: any[];
     protected listening: boolean;
     readonly [iterall.$$asyncIterator]: () => this;

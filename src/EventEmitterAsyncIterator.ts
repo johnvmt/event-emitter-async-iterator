@@ -10,6 +10,7 @@ class EventEmitterAsyncIterator extends EventEmitter implements AsyncIterator<an
 	protected listening: boolean;
 
 	public readonly [iterall.$$asyncIterator]: () => this;
+	public readonly [Symbol.asyncIterator]: () => this;
 
 	constructor() {
 		super();
@@ -19,6 +20,9 @@ class EventEmitterAsyncIterator extends EventEmitter implements AsyncIterator<an
 		this.listening = true;
 
 		this[iterall.$$asyncIterator] = () => this;
+		if (Symbol.asyncIterator) {
+			this[Symbol.asyncIterator] = () => this;
+		}
 	}
 
 	public emptyQueue(): void {
