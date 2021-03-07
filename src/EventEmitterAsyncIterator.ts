@@ -1,7 +1,15 @@
 import EventEmitter from "eventemitter3";
 import iterall from "iterall";
 
-class EventEmitterAsyncIterator extends EventEmitter {
+type ResolveResult = (arg: { value: any, done: boolean }) => void;
+
+class EventEmitterAsyncIterator extends EventEmitter implements AsyncIterator<any> {
+	protected pullQueue: ResolveResult[];
+	protected pushQueue: any[];
+	protected listening: boolean;
+
+	public readonly [iterall.$$asyncIterator]: () => this;
+
 	constructor() {
 		super();
 
@@ -12,7 +20,7 @@ class EventEmitterAsyncIterator extends EventEmitter {
 		this[iterall.$$asyncIterator] = () => this;
 	}
 
-	emptyQueue() {
+	public emptyQueue(): void {
 		if(this.listening) {
 			this.listening = false;
 
@@ -25,7 +33,7 @@ class EventEmitterAsyncIterator extends EventEmitter {
 		}
 	}
 
-	pullValue() {
+	public pullValue(): Promise<IteratorResult<any, any>> {
 		const self = this;
 		return new Promise((resolve) => {
 			if(self.pushQueue.length !== 0)
@@ -38,9 +46,9 @@ class EventEmitterAsyncIterator extends EventEmitter {
 		});
 	}
 
-	pushValue(event) {
+	public pushValue(event: any): void {
 		if(this.pullQueue.length !== 0)
-			this.pullQueue.shift()({
+			this.pullQueue.shift()!({
 				value: event,
 				done: false
 			});
@@ -48,16 +56,16 @@ class EventEmitterAsyncIterator extends EventEmitter {
 			this.pushQueue.push(event);
 	}
 
-	next() {
+	public next(): Promise<IteratorResult<any, any>> {
 		return (this.listening ? this.pullValue() : this.return());
 	}
 
-	throw(error) {
+	public throw(error: Error): Promise<IteratorResult<any, any>> {
 		this.emptyQueue();
 		return Promise.reject(error);
 	}
 
-	return() {
+	public return(): Promise<IteratorResult<any, any>> {
 		this.emit('return');
 		this.emptyQueue();
 		return Promise.resolve({
