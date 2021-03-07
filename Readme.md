@@ -1,6 +1,6 @@
-###Example
+### Example
 
-####In GraphQL server subscription:
+#### In GraphQL server subscription:
 
 	Subscription: {
 		myCommand: {
