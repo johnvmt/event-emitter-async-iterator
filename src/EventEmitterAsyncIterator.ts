@@ -70,11 +70,10 @@ class EventEmitterAsyncIterator extends EventEmitter implements AsyncIterator<an
 	public throw(error: Error): Promise<IteratorResult<any, any>> {
 		this.listening = false;
 
-		if(this.pullQueue.length !== 0) {
-			const [ resolve, reject ] = this.pullQueue.shift()!;
-
-			reject(error);
-		}
+		this.pullQueue.forEach(([resolve, reject]) => {
+			return reject(error);
+		});
+		this.pullQueue.length = 0;
 
 		this.emptyQueue();
 		return Promise.reject(error);

@@ -10,6 +10,7 @@ declare class EventEmitterAsyncIterator extends EventEmitter implements AsyncIte
     protected pushQueue: any[];
     protected listening: boolean;
     readonly [iterall.$$asyncIterator]: () => this;
+    readonly [Symbol.asyncIterator]: () => this;
     constructor();
     emptyQueue(): void;
     pullValue(): Promise<IteratorResult<any, any>>;

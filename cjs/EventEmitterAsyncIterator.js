@@ -12,6 +12,9 @@ class EventEmitterAsyncIterator extends eventemitter3_1.default {
         this.pushQueue = [];
         this.listening = true;
         this[iterall_1.default.$$asyncIterator] = () => this;
+        if (Symbol.asyncIterator) {
+            this[Symbol.asyncIterator] = () => this;
+        }
     }
     emptyQueue() {
         if (this.listening) {
@@ -51,10 +54,10 @@ class EventEmitterAsyncIterator extends eventemitter3_1.default {
     }
     throw(error) {
         this.listening = false;
-        if (this.pullQueue.length !== 0) {
-            const [resolve, reject] = this.pullQueue.shift();
-            reject(error);
-        }
+        this.pullQueue.forEach(([resolve, reject]) => {
+            return reject(error);
+        });
+        this.pullQueue.length = 0;
         this.emptyQueue();
         return Promise.reject(error);
     }

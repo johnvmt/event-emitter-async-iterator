@@ -27,6 +27,21 @@ describe("basic tests", function () {
         assert.sameOrderedMembers(emittedEvents, events);
     });
 
+    it("some events 2", async function () {
+        const e = new EventEmitterAsyncIterator();
+
+        e.pushValue("a");
+        assert.deepEqual(await e.next(), { done: false, value: "a" });
+
+        e.pushValue("b");
+        assert.deepEqual(await e.next(), { done: false, value: "b" });
+
+        e.pushValue("c");
+        e.pushValue("d");
+        assert.deepEqual(await e.next(), { done: false, value: "c" });
+        assert.deepEqual(await e.next(), { done: false, value: "d" });
+    });
+
     it("some events with throw", async function () {
         const e = new EventEmitterAsyncIterator();
 
