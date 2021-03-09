@@ -1,10 +1,16 @@
 import EventEmitter from "eventemitter3";
 import iterall from "iterall";
+declare type ResolveResult = (arg: {
+    value: any;
+    done: boolean;
+}) => void;
+declare type RejectResult = (error: Error) => void;
 declare class EventEmitterAsyncIterator extends EventEmitter implements AsyncIterator<any> {
-    protected pullQueue: any[];
-    protected pushQueue: Promise<any>[];
+    protected pullQueue: Array<[ResolveResult, RejectResult]>;
+    protected pushQueue: any[];
     protected listening: boolean;
     readonly [iterall.$$asyncIterator]: () => this;
+    readonly [Symbol.asyncIterator]: () => this;
     constructor();
     emptyQueue(): void;
     pullValue(): Promise<IteratorResult<any, any>>;

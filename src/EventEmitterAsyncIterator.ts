@@ -2,13 +2,15 @@ import EventEmitter from "eventemitter3";
 import iterall from "iterall";
 
 type ResolveResult = (arg: { value: any, done: boolean }) => void;
+type RejectResult = (error: Error) => void;
 
 class EventEmitterAsyncIterator extends EventEmitter implements AsyncIterator<any> {
-	protected pullQueue: ResolveResult[];
+	protected pullQueue: Array<[ResolveResult, RejectResult]>;
 	protected pushQueue: any[];
 	protected listening: boolean;
 
 	public readonly [iterall.$$asyncIterator]: () => this;
+	public readonly [Symbol.asyncIterator]: () => this;
 
 	constructor() {
 		super();
@@ -18,13 +20,16 @@ class EventEmitterAsyncIterator extends EventEmitter implements AsyncIterator<an
 		this.listening = true;
 
 		this[iterall.$$asyncIterator] = () => this;
+		if (Symbol.asyncIterator) {
+			this[Symbol.asyncIterator] = () => this;
+		}
 	}
 
 	public emptyQueue(): void {
 		if(this.listening) {
 			this.listening = false;
 
-			this.pullQueue.forEach((resolve) => {
+			this.pullQueue.forEach(([resolve]) => {
 				return resolve({ value: undefined, done: true });
 			});
 
@@ -35,24 +40,26 @@ class EventEmitterAsyncIterator extends EventEmitter implements AsyncIterator<an
 
 	public pullValue(): Promise<IteratorResult<any, any>> {
 		const self = this;
-		return new Promise((resolve) => {
+		return new Promise((resolve, reject) => {
 			if(self.pushQueue.length !== 0)
 				resolve({
 					value: self.pushQueue.shift(),
 					done: false
 				});
 			else
-				self.pullQueue.push(resolve);
+				self.pullQueue.push([resolve, reject]);
 		});
 	}
 
 	public pushValue(event: any): void {
-		if(this.pullQueue.length !== 0)
-			this.pullQueue.shift()!({
+		if(this.pullQueue.length !== 0) {
+			const [ resolve ] = this.pullQueue.shift()!;
+
+			resolve({
 				value: event,
 				done: false
 			});
-		else
+		} else
 			this.pushQueue.push(event);
 	}
 
@@ -61,6 +68,13 @@ class EventEmitterAsyncIterator extends EventEmitter implements AsyncIterator<an
 	}
 
 	public throw(error: Error): Promise<IteratorResult<any, any>> {
+		this.listening = false;
+
+		this.pullQueue.forEach(([resolve, reject]) => {
+			return reject(error);
+		});
+		this.pullQueue.length = 0;
+
 		this.emptyQueue();
 		return Promise.reject(error);
 	}
