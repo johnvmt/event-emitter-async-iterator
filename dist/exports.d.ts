@@ -1,17 +1,7 @@
-import EventEmitter from "eventemitter3";
-import iterall from "iterall";
+import { EventEmitter } from 'events';
+import iterall from 'iterall';
 
-type ResolveResult = (arg: { value: any, done: boolean }) => void;
-type RejectResult = (error: Error) => void;
-
-class EventEmitterAsyncIterator extends EventEmitter implements AsyncIterator<any> {
-	protected pullQueue: Array<[ResolveResult, RejectResult]>;
-	protected pushQueue: any[];
-	protected listening: boolean;
-
-	public readonly [iterall.$$asyncIterator]: () => this;
-	public readonly [Symbol.asyncIterator]: () => this;
-
+class EventEmitterAsyncIterator extends EventEmitter {
 	constructor() {
 		super();
 
@@ -25,7 +15,7 @@ class EventEmitterAsyncIterator extends EventEmitter implements AsyncIterator<an
 		}
 	}
 
-	public emptyQueue(): void {
+	emptyQueue() {
 		if(this.listening) {
 			this.listening = false;
 
@@ -38,7 +28,7 @@ class EventEmitterAsyncIterator extends EventEmitter implements AsyncIterator<an
 		}
 	}
 
-	public pullValue(): Promise<IteratorResult<any, any>> {
+	pullValue() {
 		const self = this;
 		return new Promise((resolve, reject) => {
 			if(self.pushQueue.length !== 0)
@@ -51,9 +41,9 @@ class EventEmitterAsyncIterator extends EventEmitter implements AsyncIterator<an
 		});
 	}
 
-	public pushValue(event: any): void {
+	pushValue(event) {
 		if(this.pullQueue.length !== 0) {
-			const [ resolve ] = this.pullQueue.shift()!;
+			const [ resolve ] = this.pullQueue.shift();
 
 			resolve({
 				value: event,
@@ -63,11 +53,13 @@ class EventEmitterAsyncIterator extends EventEmitter implements AsyncIterator<an
 			this.pushQueue.push(event);
 	}
 
-	public next(): Promise<IteratorResult<any, any>> {
-		return (this.listening ? this.pullValue() : this.return());
+	next() {
+		return this.listening
+			? this.pullValue()
+			: this.return();
 	}
 
-	public throw(error: Error): Promise<IteratorResult<any, any>> {
+	throw(error) {
 		this.listening = false;
 
 		this.pullQueue.forEach(([resolve, reject]) => {
@@ -79,7 +71,7 @@ class EventEmitterAsyncIterator extends EventEmitter implements AsyncIterator<an
 		return Promise.reject(error);
 	}
 
-	public return(): Promise<IteratorResult<any, any>> {
+	return() {
 		this.emit('return');
 		this.emptyQueue();
 		return Promise.resolve({
@@ -89,4 +81,4 @@ class EventEmitterAsyncIterator extends EventEmitter implements AsyncIterator<an
 	}
 }
 
-export default EventEmitterAsyncIterator;
+export { EventEmitterAsyncIterator };
