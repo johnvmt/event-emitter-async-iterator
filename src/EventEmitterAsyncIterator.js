@@ -2,55 +2,81 @@ import { EventEmitter } from "events";
 import iterall from "iterall";
 
 class EventEmitterAsyncIterator extends EventEmitter {
-	constructor() {
+	constructor(options = {}) {
 		super();
 
 		this.pullQueue = [];
 		this.pushQueue = [];
 		this.listening = true;
 
+		this._options = options;
+
+		if(typeof this._options.max === "number" && this._options.max < 1)
+			throw new Error("Invalid max value");
+
 		this[iterall.$$asyncIterator] = () => this;
-		if (Symbol.asyncIterator) {
+		if (Symbol.asyncIterator)
 			this[Symbol.asyncIterator] = () => this;
+	}
+
+	stopListener() {
+		if(this.listening) {
+			this.listening = false;
+			this.emptyQueues();
 		}
 	}
 
-	emptyQueue() {
-		if(this.listening) {
-			this.listening = false;
+	emptyQueues() {
+		this.pullQueue.forEach(({resolve}) => resolve({ value: undefined, done: true }));
+		this.pullQueue = [];
+		this.pushQueue = [];
+	}
 
-			this.pullQueue.forEach(([resolve]) => {
-				return resolve({ value: undefined, done: true });
-			});
-
-			this.pullQueue.length = 0;
-			this.pushQueue.length = 0;
-		}
+	static async valueFromPushQueueItem({value, callback}) {
+		return callback
+			? await callback()
+			: value;
 	}
 
 	pullValue() {
-		const self = this;
-		return new Promise((resolve, reject) => {
-			if(self.pushQueue.length !== 0)
+		return new Promise(async (resolve, reject) => {
+			if(this.pushQueue.length > 0) { // items in push queue
+				const value = await EventEmitterAsyncIterator.valueFromPushQueueItem(this.pushQueue.shift());
 				resolve({
-					value: self.pushQueue.shift(),
+					value: value, // get value of item at front of push queue
 					done: false
 				});
+			}
 			else
-				self.pullQueue.push([resolve, reject]);
+				this.pullQueue.push({resolve, reject});
 		});
 	}
 
-	pushValue(event) {
-		if(this.pullQueue.length !== 0) {
-			const [ resolve ] = this.pullQueue.shift();
+	pushCallback(callback) {
+		return this.pushQueueItem({callback});
+	}
 
+	pushValue(value) {
+		return this.pushQueueItem({value});
+	}
+
+	async pushQueueItem(item) {
+		if(this.pullQueue.length > 0) { // pulls pending
+			const {resolve} = this.pullQueue.shift(); // get pull queue resolver
+			const value = await EventEmitterAsyncIterator.valueFromPushQueueItem(item);
 			resolve({
-				value: event,
+				value: value,
 				done: false
 			});
-		} else
-			this.pushQueue.push(event);
+		}
+		else { // no pulls pending
+			if(typeof this._options.max === "number") { // remove excess item
+				while(this.pushQueue.length > (this._options.max - 1))
+					this.pushQueue.shift();
+			}
+
+			this.pushQueue.push(item);
+		}
 	}
 
 	next() {
@@ -60,20 +86,14 @@ class EventEmitterAsyncIterator extends EventEmitter {
 	}
 
 	throw(error) {
-		this.listening = false;
-
-		this.pullQueue.forEach(([resolve, reject]) => {
-			return reject(error);
-		});
-		this.pullQueue.length = 0;
-
-		this.emptyQueue();
+		this.pullQueue.forEach(({reject}) => reject(error));
+		this.stopListener();
 		return Promise.reject(error);
 	}
 
 	return() {
 		this.emit('return');
-		this.emptyQueue();
+		this.stopListener();
 		return Promise.resolve({
 			value: undefined,
 			done: true
